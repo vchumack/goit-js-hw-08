@@ -4,16 +4,16 @@ import throttle from 'lodash.throttle';
 const form = document.querySelector('.feedback-form');
 const input = document.querySelector('input');
 const textarea = document.querySelector('textarea');
-// const buttonForm = document.querySelector('button');
 
 // слушатели на инпут и сабмит
 form.addEventListener('input', throttle(onFormInput, 500));
 form.addEventListener('submit', onFormSubmit);
 
 let parsedData = null;
+const LOCAL_STORAGE_KEY = 'feedback-form-state';
 
 // вызов функции с подставлением полей в форму из лок хранилища
-getLocalValues();
+getLocalStorageValues();
 
 // создали объект, куда будут сохраняться данные, введенные пользователям
 // если у parsedData есть email/message, тогда выполняй проверку дальше, если нет, сразу выходи
@@ -21,11 +21,6 @@ const formData = {
   email: parsedData?.email ? parsedData.email : '',
   message: parsedData?.message ? parsedData.message : '',
 };
-
-// функция для сохранения в локальное хранилище под нужным нам именем и в нужном формате
-function saveData() {
-  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
-}
 
 function onFormInput(event) {
   formData[event.target.name] = event.target.value;
@@ -35,26 +30,13 @@ function onFormInput(event) {
 }
 
 // функция для получения данных из локального хранилища
-function getLocalValues() {
-  const savedData = localStorage.getItem('feedback-form-state');
-  parsedData = JSON.parse(savedData);
+function getLocalStorageValues() {
+  parsedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
 
   // если в лок хранилище были данные, то подставь их в наши поля формы
   if (parsedData) {
-    console.log(parsedData);
-    if (parsedData.email && parsedData.message) {
-      input.value = parsedData.email;
-      textarea.value = parsedData.message;
-      return;
-    }
-    if (parsedData.email) {
-      input.value = parsedData.email;
-      return;
-    }
-    if (parsedData.message) {
-      textarea.value = parsedData.message;
-      return;
-    }
+    parsedData.email ? (input.value = parsedData.email) : '';
+    parsedData.message ? (textarea.value = parsedData.message) : '';
   }
 }
 
@@ -67,9 +49,26 @@ function onFormSubmit(event) {
     return;
   }
 
-  //очищаем поля формы и хранилище
+  //очищаем поля формы, хранилище и консоль
   form.reset();
-  localStorage.removeItem('feedback-form-state');
-
+  removeLocalStorage(LOCAL_STORAGE_KEY);
   console.log(formData);
+
+  resetFormData();
+}
+
+// функция для сохранения в локальное хранилище под нужным нам именем и в нужном формате
+function saveData() {
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formData));
+}
+
+//очищения локал стореж
+function removeLocalStorage(key) {
+  localStorage.removeItem(key);
+}
+
+// очистка консоли после сабмита
+function resetFormData() {
+  formData.email = '';
+  formData.message = '';
 }
